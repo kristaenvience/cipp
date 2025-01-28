@@ -2,7 +2,7 @@ import { TabbedLayout } from "/src/layouts/TabbedLayout";
 import { Layout as DashboardLayout } from "/src/layouts/index.js";
 import tabOptions from "../tabOptions";
 import CippTablePage from "/src/components/CippComponents/CippTablePage";
-import { EyeIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/outline";
 import {
   AdminPanelSettings,
   GppBad,
@@ -34,24 +34,27 @@ const actions = [
   },
   {
     label: "Enable automatic extension",
-    type: "POST",
-    url: "/api/ExecAutoExtendGDAP?ID=[id]",
+    type: "GET",
+    url: "/api/ExecAutoExtendGDAP",
+    data: { ID: "id" },
     confirmText: "Are you sure you want to enable auto-extend for this relationship?",
     color: "info",
     icon: <HourglassBottom />,
   },
   {
     label: "Remove Global Administrator from Relationship",
-    type: "POST",
-    url: "/api/ExecGDAPRemoveGArole?&GDAPID=[id]",
+    type: "GET",
+    url: "/api/ExecGDAPRemoveGArole",
+    data: { GDAPID: "id" },
     confirmText: "Are you sure you want to remove Global Administrator from this relationship?",
     color: "danger",
     icon: <AdminPanelSettings />,
   },
   {
     label: "Terminate Relationship",
-    type: "POST",
-    url: "/api/ExecDeleteGDAPRelationship?GDAPID=[id]",
+    type: "GET",
+    url: "/api/ExecDeleteGDAPRelationship",
+    data: { GDAPID: "id" },
     confirmText: "Are you sure you want to terminate this relationship?",
     color: "error",
     icon: <GppBad />,

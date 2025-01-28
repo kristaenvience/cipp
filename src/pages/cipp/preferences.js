@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { useSettings } from "../../hooks/use-settings";
 import countryList from "../../data/countryList.json";
 import { CippSettingsSideBar } from "../../components/CippComponents/CippSettingsSideBar";
+import CippDevOptions from "/src/components/CippComponents/CippDevOptions";
 
 const Page = () => {
   const settings = useSettings();
@@ -50,65 +51,15 @@ const Page = () => {
       >
         <Container maxWidth="xl" sx={{ height: "100%" }}>
           <Stack spacing={4}>
-            <Stack spacing={2}>
-              <Stack
-                alignItems="flex-start"
-                direction="row"
-                justifyContent="space-between"
-                spacing={1}
-              ></Stack>
-            </Stack>
             <div>
               <Grid container spacing={3}>
-                <Grid xs={12} lg={8}>
+                <Grid size={{ xs: 12, lg: 8 }}>
                   <Stack spacing={3}>
                     <CippPropertyListCard
                       layout="two"
                       showDivider={false}
                       title="General Settings"
                       propertyItems={[
-                        {
-                          label: "Tenant Overview Page",
-                          value: (
-                            <CippFormComponent
-                              type="autoComplete"
-                              sx={{ width: "250px" }}
-                              disableClearable={true}
-                              name="TenantListSelector"
-                              formControl={formcontrol}
-                              multiple={false}
-                              validators={{
-                                required: { value: true, message: "This field is required" },
-                              }}
-                              options={[
-                                { value: "full", label: "Show the full page" },
-                                { value: "compressed", label: "Show the compressed page" },
-                              ]}
-                            />
-                          ),
-                        },
-
-                        {
-                          label: "Default Theme",
-                          value: (
-                            <CippFormComponent
-                              type="autoComplete"
-                              sx={{ width: "250px" }}
-                              disableClearable={true}
-                              name="currentTheme"
-                              formControl={formcontrol}
-                              multiple={false}
-                              validators={{
-                                required: { value: true, message: "This field is required" },
-                              }}
-                              options={[
-                                { value: "light", label: "Light" },
-                                { value: "dark", label: "Dark" },
-                                { value: "browser", label: "Let the browser choose" },
-                              ]}
-                            />
-                          ),
-                        },
                         {
                           label: "Added Attributes when creating a new user",
                           value: (
@@ -308,8 +259,11 @@ const Page = () => {
                     />
                   </Stack>
                 </Grid>
-                <Grid xs={12} lg={4}>
-                  <CippSettingsSideBar formcontrol={formcontrol} />
+                <Grid size={{ xs: 12, lg: 4 }}>
+                  <Stack spacing={3}>
+                    <CippSettingsSideBar formcontrol={formcontrol} />
+                    <CippDevOptions />
+                  </Stack>
                 </Grid>
               </Grid>
             </div>

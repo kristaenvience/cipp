@@ -5,6 +5,7 @@ import {
   LaptopWindows,
   MailOutline,
   Shield,
+  Description,
 } from "@mui/icons-material";
 import { Chip, Link, SvgIcon } from "@mui/material";
 import { Box } from "@mui/system";
@@ -12,16 +13,18 @@ import { CippCopyToClipBoard } from "../components/CippComponents/CippCopyToClip
 import { getCippLicenseTranslation } from "./get-cipp-license-translation";
 import CippDataTableButton from "../components/CippTable/CippDataTableButton";
 import { LinearProgressWithLabel } from "../components/linearProgressWithLabel";
+import { CippLocationDialog } from "../components/CippComponents/CippLocationDialog";
 import { isoDuration, en } from "@musement/iso-duration";
 import { CippTimeAgo } from "../components/CippComponents/CippTimeAgo";
 import { getCippRoleTranslation } from "./get-cipp-role-translation";
 import { CogIcon, ServerIcon, UserIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { getCippTranslation } from "./get-cipp-translation";
+import { getSignInErrorCodeTranslation } from "./get-cipp-signin-errorcode-translation";
 
 export const getCippFormatting = (data, cellName, type, canReceive) => {
   const isText = type === "text";
   const cellNameLower = cellName.toLowerCase();
-  // if data is a data object, return a formatted date
+  // if data is a data object, return a fFormatted date
   if (cellName === "addrow") {
     return isText ? (
       "No data"
@@ -41,6 +44,7 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
     portal_intune: LaptopWindows,
     portal_security: Shield,
     portal_compliance: CompassCalibration,
+    portal_sharepoint: Description,
   };
 
   //if the cellName starts with portal_, return text, or a link with an icon
@@ -54,6 +58,30 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
           <IconComponent />
         </SvgIcon>
       </Link>
+    );
+  }
+
+  if (cellName === "prohibitSendReceiveQuotaInBytes" || cellName === "storageUsedInBytes") {
+    //convert bytes to GB
+    const bytes = data;
+    if (bytes === null || bytes === undefined) {
+      return isText ? (
+        "No data"
+      ) : (
+        <Chip variant="outlined" label="No data" size="small" color="info" />
+      );
+    }
+    const gb = bytes / 1024 / 1024 / 1024;
+    return isText ? `${gb.toFixed(2)} GB` : `${gb.toFixed(2)} GB`;
+  }
+
+  if (cellName === "info.logoUrl") {
+    return isText ? (
+      data
+    ) : data ? (
+      <img src={data} alt="logo" style={{ width: "16px", height: "16px" }} />
+    ) : (
+      ""
     );
   }
 
@@ -77,16 +105,26 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
     "WhenCreated",
     "WhenChanged",
     "CreationTime",
+    "renewalDate",
+    "commitmentTerm.renewalConfiguration.renewalDate",
+    "purchaseDate",
+    "NextOccurrence",
+    "LastOccurrence",
+    "NotBefore",
+    "NotAfter",
   ];
-  if (timeAgoArray.includes(cellName)) {
-    return isText && canReceive !== "both" ? (
-      new Date(data)
+
+  const matchDateTime = /[dD]ate[tT]ime/;
+  if (timeAgoArray.includes(cellName) || matchDateTime.test(cellName)) {
+    return isText && canReceive === false ? (
+      new Date(data).toLocaleString() // This runs if canReceive is false and isText is true
+    ) : isText && canReceive !== "both" ? (
+      new Date(data) // This runs if isText is true and canReceive is not "both" or false
     ) : (
       <CippTimeAgo data={data} type={type} />
     );
   }
-
-  const passwordItems = ["password", "applicationsecret", "refreshtoken"];
+  const passwordItems = ["breachPass", "applicationsecret", "refreshtoken"];
 
   if (passwordItems.includes(cellNameLower)) {
     //return a button that shows/hides the password if it has a password. In text mode, return "Password hidden"
@@ -167,8 +205,8 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
         ? data.join(", ")
         : data.map((item) => (
             <CippCopyToClipBoard
-              key={`${item.label}`}
-              text={item.label ? item.label : item}
+              key={`${item?.label}`}
+              text={item?.label ? item?.label : item}
               type="chip"
             />
           ));
@@ -176,7 +214,7 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
       return isText ? (
         data
       ) : (
-        <CippCopyToClipBoard text={data.label ? data.label : data} type="chip" />
+        <CippCopyToClipBoard text={data?.label ? data?.label : data} type="chip" />
       );
     }
   }
@@ -196,9 +234,13 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
   }
 
   if (data?.enabled === true && data?.date) {
-    return isText
-      ? `Yes, Scheduled for ${new Date(data.date).toLocaleString()}`
-      : `Yes, Scheduled for ${new Date(data.date).toLocaleString()}`;
+    return isText ? (
+      `Yes, Scheduled for ${new Date(data.date).toLocaleString()}`
+    ) : (
+      <>
+        Yes, Scheduled for <CippTimeAgo data={data.date} />
+      </>
+    );
   }
   if (data?.enabled === true || data?.enabled === false) {
     return isText ? (
@@ -224,13 +266,6 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
     return isText ? data : <Chip variant="outlined" label={data} size="small" color="info" />;
   }
 
-  if (cellName === "@odata.type") {
-    if (data.startsWith("#microsoft.graph")) {
-      data = data.replace("#microsoft.graph.", "");
-    }
-    return getCippTranslation(data, "odataType");
-  }
-
   // Handle null or undefined data
   if (data === null || data === undefined) {
     return isText ? (
@@ -242,13 +277,26 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
     );
   }
 
+  if (cellName.includes("@odata.type")) {
+    if (data.startsWith("#microsoft.graph")) {
+      data = data.replace("#microsoft.graph.", "");
+      return getCippTranslation(data, "@odata.type");
+    }
+    return data;
+  }
+
   // Handle From address
   if (cellName === "From") {
-    // split on ; , and create chips per email
-    const emails = data.split(/;|,/);
-    return isText
-      ? emails.join(", ")
-      : emails.map((email) => <CippCopyToClipBoard key={email} text={email} type="chip" />);
+    // if data is array
+    if (Array.isArray(data)) {
+      return isText ? data.join(", ") : data.join(", ");
+    } else {
+      // split on ; , and create chips per email
+      const emails = data.split(/;|,/);
+      return isText
+        ? emails.join(", ")
+        : emails.map((email) => <CippCopyToClipBoard key={email} text={email} type="chip" />);
+    }
   }
 
   // Handle proxyAddresses
@@ -290,7 +338,7 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
   if (typeof data === "string" && (data.startsWith("{") || data.startsWith("["))) {
     try {
       return isText ? (
-        JSON.stringify(JSON.parse(data))
+        data
       ) : (
         <CippDataTableButton data={JSON.parse(data)} tableTitle={getCippTranslation(cellName)} />
       );
@@ -309,6 +357,20 @@ export const getCippFormatting = (data, cellName, type, canReceive) => {
     ) : (
       <CippDataTableButton data={properties} tableTitle={getCippTranslation(cellName)} />
     );
+  }
+
+  if (cellName === "status.errorCode") {
+    return getSignInErrorCodeTranslation(data);
+  }
+
+  if (cellName === "location" && data?.geoCoordinates) {
+    return isText ? JSON.stringify(data) : <CippLocationDialog location={data} />;
+  }
+
+  const translateProps = ["riskLevel", "riskState", "riskDetail", "enrollmentType", "profileType"];
+
+  if (translateProps.includes(cellName)) {
+    return getCippTranslation(data);
   }
 
   // Handle boolean data

@@ -4,25 +4,95 @@ import { useRouter } from "next/router";
 import { ApiGetCall } from "/src/api/ApiCall";
 import CippFormSkeleton from "/src/components/CippFormPages/CippFormSkeleton";
 import CalendarIcon from "@heroicons/react/24/outline/CalendarIcon";
-import { Check, Mail } from "@mui/icons-material";
+import { AdminPanelSettings, Check, Group, Mail } from "@mui/icons-material";
 import { HeaderedTabbedLayout } from "../../../../../layouts/HeaderedTabbedLayout";
 import tabOptions from "./tabOptions";
-import ReactTimeAgo from "react-time-ago";
 import { CippCopyToClipBoard } from "../../../../../components/CippComponents/CippCopyToClipboard";
 import { Box, Stack } from "@mui/system";
 import Grid from "@mui/material/Grid2";
 import { CippUserInfoCard } from "../../../../../components/CippCards/CippUserInfoCard";
-import { Typography } from "@mui/material";
+import { SvgIcon, Typography } from "@mui/material";
 import { CippBannerListCard } from "../../../../../components/CippCards/CippBannerListCard";
+import { CippTimeAgo } from "../../../../../components/CippComponents/CippTimeAgo";
+import { useEffect, useState } from "react";
+import CippUserActions from "/src/components/CippComponents/CippUserActions";
+import { EyeIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { CippDataTable } from "/src/components/CippTable/CippDataTable";
+import dynamic from "next/dynamic";
+const CippMap = dynamic(() => import("/src/components/CippComponents/CippMap"), { ssr: false });
+
+import { Button, Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import { Close } from "@mui/icons-material";
+import { CippPropertyList } from "../../../../../components/CippComponents/CippPropertyList";
+
+const SignInLogsDialog = ({ open, onClose, userId, tenantFilter }) => {
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <DialogTitle sx={{ py: 2 }}>
+        Sign-In Logs
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{ position: "absolute", right: 8, top: 8 }}
+        >
+          <Close />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers>
+        <CippDataTable
+          noCard={true}
+          title="Sign-In Logs"
+          simpleColumns={[
+            "createdDateTime",
+            "status",
+            "ipAddress",
+            "clientAppUsed",
+            "resourceDisplayName",
+            "status.errorCode",
+            "location",
+          ]}
+          api={{
+            url: "/api/ListUserSigninLogs",
+            data: {
+              UserId: userId,
+              tenantFilter: tenantFilter,
+              top: 50,
+            },
+            queryKey: `ListSignIns-${userId}`,
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Page = () => {
   const userSettingsDefaults = useSettings();
   const router = useRouter();
   const { userId } = router.query;
+  const [waiting, setWaiting] = useState(false);
+  const [signInLogsDialogOpen, setSignInLogsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (userId) {
+      setWaiting(true);
+    }
+  }, [userId]);
 
   const userRequest = ApiGetCall({
     url: `/api/ListUsers?UserId=${userId}&tenantFilter=${userSettingsDefaults.currentTenant}`,
     queryKey: `ListUsers-${userId}`,
+    waiting: waiting,
+  });
+
+  const userMemberOf = ApiGetCall({
+    url: "/api/ListGraphRequest",
+    data: {
+      Endpoint: `/users/${userId}/memberOf`,
+      tenantFilter: userSettingsDefaults.currentTenant,
+      $top: 99,
+    },
+    queryKey: `UserMemberOf-${userId}`,
   });
 
   const MFARequest = ApiGetCall({
@@ -34,15 +104,17 @@ const Page = () => {
       $top: 99,
     },
     queryKey: `MFA-${userId}`,
+    waiting: waiting,
   });
 
   const signInLogs = ApiGetCall({
     url: `/api/ListUserSigninLogs?UserId=${userId}&tenantFilter=${userSettingsDefaults.currentTenant}&top=1`,
     queryKey: `ListSignIns-${userId}`,
+    waiting: waiting,
   });
 
   // Set the title and subtitle for the layout
-  const title = userRequest.isSuccess ? userRequest.data?.[0]?.displayName : "Loading...";
+  const title = userRequest.isSuccess ? <>{userRequest.data?.[0]?.displayName}</> : "Loading...";
 
   const subtitle = userRequest.isSuccess
     ? [
@@ -54,7 +126,7 @@ const Page = () => {
           icon: <CalendarIcon />,
           text: (
             <>
-              Created: <ReactTimeAgo date={new Date(userRequest.data?.[0]?.createdDateTime)} />{" "}
+              Created <CippTimeAgo data={userRequest.data?.[0]?.createdDateTime} />
             </>
           ),
         },
@@ -86,6 +158,20 @@ const Page = () => {
       subtext: `Logged into application ${signInData.resourceDisplayName || "Unknown Application"}`,
       statusColor: signInData.status.errorCode === 0 ? "success.main" : "error.main",
       statusText: signInData.status.errorCode === 0 ? "Success" : "Failed",
+      actionButton: (
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => setSignInLogsDialogOpen(true)}
+          startIcon={
+            <SvgIcon fontSize="small">
+              <EyeIcon />
+            </SvgIcon>
+          }
+        >
+          More Sign-In Logs
+        </Button>
+      ),
       propertyItems: [
         {
           label: "Client App Used",
@@ -105,6 +191,39 @@ const Page = () => {
           value: signInData.status?.additionalDetails || "N/A",
         },
       ],
+      children: (
+        <>
+          {signInData?.location && (
+            <>
+              <Typography variant="h6">Location</Typography>
+              <Grid container spacing={2}>
+                <Grid item size={8}>
+                  <CippMap
+                    markers={[
+                      {
+                        position: [
+                          signInData.location.geoCoordinates.latitude,
+                          signInData.location.geoCoordinates.longitude,
+                        ],
+                        popup: `${signInData.location.city}, ${signInData.location.state}, ${signInData.location.countryOrRegion}`,
+                      },
+                    ]}
+                  />
+                </Grid>
+                <Grid item size={4}>
+                  <CippPropertyList
+                    propertyItems={[
+                      { label: "City", value: signInData.location.city },
+                      { label: "State", value: signInData.location.state },
+                      { label: "Country/Region", value: signInData.location.countryOrRegion },
+                    ]}
+                  />
+                </Grid>
+              </Grid>
+            </>
+          )}
+        </>
+      ),
     };
 
     // Prepare the conditional access policies items
@@ -323,10 +442,61 @@ const Page = () => {
     ];
   }
 
+  const groupMembershipItems = userMemberOf.isSuccess
+    ? [
+        {
+          id: 1,
+          cardLabelBox: {
+            cardLabelBoxHeader: <Group />,
+          },
+          text: "Groups",
+          subtext: "List of groups the user is a member of",
+          table: {
+            title: "Group Memberships",
+            hideTitle: true,
+            actions: [
+              {
+                icon: <PencilIcon />,
+                label: "Edit Group",
+                link: "/identity/administration/groups/edit?groupId=[id]",
+              },
+            ],
+            data: userMemberOf?.data?.Results.filter(
+              (item) => item?.["@odata.type"] === "#microsoft.graph.group"
+            ),
+            simpleColumns: ["displayName", "groupTypes", "securityEnabled", "mailEnabled"],
+          },
+        },
+      ]
+    : [];
+
+  const roleMembershipItems = userMemberOf.isSuccess
+    ? [
+        {
+          id: 1,
+          cardLabelBox: {
+            cardLabelBoxHeader: <AdminPanelSettings />,
+          },
+          text: "Admin Roles",
+          subtext: "List of roles the user is a member of",
+          table: {
+            title: "Admin Roles",
+            hideTitle: true,
+            data: userMemberOf?.data?.Results.filter(
+              (item) => item?.["@odata.type"] === "#microsoft.graph.directoryRole"
+            ),
+            simpleColumns: ["displayName", "description"],
+          },
+        },
+      ]
+    : [];
+
   return (
     <HeaderedTabbedLayout
       tabOptions={tabOptions}
       title={title}
+      actions={CippUserActions()}
+      actionsData={data}
       subtitle={subtitle}
       isFetching={userRequest.isLoading}
     >
@@ -366,11 +536,28 @@ const Page = () => {
                   items={mfaDevicesItems}
                   isCollapsible={mfaDevicesItems.length > 0 ? true : false}
                 />
+                <Typography variant="h6">Memberships</Typography>
+                <CippBannerListCard
+                  isFetching={userMemberOf.isLoading}
+                  items={groupMembershipItems}
+                  isCollapsible={groupMembershipItems.length > 0 ? true : false}
+                />
+                <CippBannerListCard
+                  isFetching={userMemberOf.isLoading}
+                  items={roleMembershipItems}
+                  isCollapsible={roleMembershipItems.length > 0 ? true : false}
+                />
               </Stack>
             </Grid>
           </Grid>
         </Box>
       )}
+      <SignInLogsDialog
+        open={signInLogsDialogOpen}
+        onClose={() => setSignInLogsDialogOpen(false)}
+        userId={userId}
+        tenantFilter={userSettingsDefaults.currentTenant}
+      />
     </HeaderedTabbedLayout>
   );
 };

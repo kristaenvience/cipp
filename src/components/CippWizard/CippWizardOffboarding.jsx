@@ -94,6 +94,12 @@ export const CippWizardOffboarding = (props) => {
                 formControl={formControl}
               />
               <CippFormComponent
+                name="RemoveMFADevices"
+                label="Remove all MFA Devices"
+                type="switch"
+                formControl={formControl}
+              />
+              <CippFormComponent
                 name="DeleteUser"
                 label="Delete user"
                 type="switch"
@@ -294,6 +300,7 @@ export const CippWizardOffboarding = (props) => {
         onPreviousStep={onPreviousStep}
         onNextStep={onNextStep}
         formControl={formControl}
+        replacementBehaviour="removeNulls"
       />
     </Stack>
   );

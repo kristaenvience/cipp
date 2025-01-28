@@ -130,6 +130,13 @@ export const Layout = (props) => {
 
   useEffect(() => {
     if (userSettingsAPI.isSuccess && !userSettingsAPI.isFetching && !userSettingsComplete) {
+      //if usersettingsAPI.data contains offboardingDefaults.user, delete that specific key.
+      if (userSettingsAPI.data.offboardingDefaults?.user) {
+        delete userSettingsAPI.data.offboardingDefaults.user;
+      }
+      if (userSettingsAPI?.data?.currentTheme) {
+        delete userSettingsAPI.data.currentTheme;
+      }
       settings.handleUpdate(userSettingsAPI.data);
       setUserSettingsComplete(true);
     }

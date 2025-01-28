@@ -16,7 +16,6 @@ import CSVReader from "../CSVReader";
 import get from "lodash/get";
 import {
   MenuButtonBold,
-  MenuButtonCode,
   MenuButtonItalic,
   MenuControlsContainer,
   MenuDivider,
@@ -188,11 +187,8 @@ export const CippFormComponent = (props) => {
       return (
         <>
           <div>
-            <Checkbox
-              {...other}
-              {...formControl.register(convertedName, { ...validators })}
-              label={label}
-            />
+            <Checkbox {...other} {...formControl.register(convertedName, { ...validators })} />
+            <label>{label}</label>
           </div>
           <Typography variant="subtitle3" color="error">
             {get(errors, convertedName, {})?.message}
@@ -225,6 +221,33 @@ export const CippFormComponent = (props) => {
           </FormControl>
           <Typography variant="subtitle3" color="error">
             {get(errors, convertedName, {})?.message}
+          </Typography>
+        </>
+      );
+
+    case "select":
+      return (
+        <>
+          <div>
+            <Controller
+              name={convertedName}
+              control={formControl.control}
+              rules={validators}
+              render={({ field }) => (
+                <CippAutoComplete
+                  {...other}
+                  isFetching={other.isFetching}
+                  variant="filled"
+                  defaultValue={field.value}
+                  label={label}
+                  multiple={false}
+                  onChange={(value) => field.onChange(value.value)}
+                />
+              )}
+            />
+          </div>
+          <Typography variant="subtitle3" color="error">
+            {get(errors, convertedName, {}).message}
           </Typography>
         </>
       );

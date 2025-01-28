@@ -111,11 +111,11 @@ export const CippGDAPResults = (props) => {
       )}
 
       {executeCheck.isFetching ? (
-        <Skeleton variant="rectangular" height={50} sx={{ borderRadius: 1, ml: 3, mr: 1 }} />
+        <Skeleton variant="rectangular" height={100} sx={{ borderRadius: 1, ml: 3, mr: 1 }} />
       ) : (
         <>
           <List>
-            {gdapTests.map((test) => {
+            {gdapTests.map((test, index) => {
               var matchedResults = results?.Results?.[test.resultProperty]?.filter((item) =>
                 new RegExp(test.match)?.test(item?.[test.matchProperty])
               );
@@ -128,7 +128,7 @@ export const CippGDAPResults = (props) => {
               }
 
               return (
-                <ListItem sx={{ py: 0 }}>
+                <ListItem sx={{ py: 0 }} key={index}>
                   <Typography variant="body2">
                     <SvgIcon fontSize="sm" style={{ marginRight: 4 }}>
                       {testResult ? <CheckCircle /> : <XMarkIcon />}

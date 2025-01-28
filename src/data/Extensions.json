@@ -33,7 +33,6 @@
     "logoDark": "/assets/integrations/sherweb_dark.png",
     "description": "Enable the Sherweb integration to manage your CSP licensing from CIPP.",
     "helpText": "This integration allows you to manage your CSP licensing from CIPP. Purchase new licenses while adding or editing users in CIPP. Not a Sherweb partner? Sign up for the Sherweb Cloud Services for MSPs program.",
-    "alertText": "This integration is in a closed beta. To register for interest please visit the registration page. Filling in information while not in the beta is possible, but will not enable the functionality.",
     "mappingRequired": true,
     "links": [
       {
@@ -55,19 +54,22 @@
         "type": "textField",
         "name": "Sherweb.clientId",
         "label": "Client ID",
-        "placeholder": "Enter your Sherweb Client ID"
+        "placeholder": "Enter your Sherweb Client ID",
+        "required": true
       },
       {
         "type": "textField",
         "name": "Sherweb.SubscriptionKey",
         "label": "Subscription Key",
-        "placeholder": "Enter your Sherweb Subscription Key"
+        "placeholder": "Enter your Sherweb Subscription Key",
+        "required": true
       },
       {
         "type": "password",
         "name": "Sherweb.APIKey",
         "label": "Client Secret",
-        "placeholder": "Enter your Sherweb Client Secret"
+        "placeholder": "Enter your Sherweb Client Secret",
+        "required": true
       },
       {
         "type": "autoComplete",
@@ -104,13 +106,15 @@
         "type": "textField",
         "name": "Gradient.VendorKey",
         "label": "Gradient Vendor API Key",
-        "placeholder": "Enter your Gradient Vendor Key."
+        "placeholder": "Enter your Gradient Vendor Key.",
+        "required": true
       },
       {
         "type": "password",
         "name": "Gradient.APIKey",
         "label": "Gradient Partner API Key",
-        "placeholder": "Enter your Gradient Partner Key. Leave blank to keep your current key."
+        "placeholder": "Enter your Gradient Partner Key. Leave blank to keep your current key.",
+        "required": true
       },
       {
         "type": "switch",
@@ -145,37 +149,43 @@
         "type": "textField",
         "name": "HaloPSA.ResourceURL",
         "label": "HaloPSA Resource Server URL",
-        "placeholder": "Enter your HaloPSA Resource Server URL."
+        "placeholder": "Enter your HaloPSA Resource Server URL.",
+        "required": true
       },
       {
         "type": "textField",
         "name": "HaloPSA.AuthURL",
         "label": "HaloPSA Authorisation Endpoint URL",
-        "placeholder": "Enter your HaloPSA Authorisation Endpoint URL."
+        "placeholder": "Enter your HaloPSA Authorisation Endpoint URL.",
+        "required": true
       },
       {
         "type": "textField",
         "name": "HaloPSA.Tenant",
         "label": "HaloPSA Tenant",
-        "placeholder": "Enter your HaloPSA Tenant (Leave blank if self-hosted"
+        "placeholder": "Enter your HaloPSA Tenant (Leave blank if self-hosted",
+        "required": true
       },
       {
         "type": "textField",
         "name": "HaloPSA.TicketType",
         "label": "HaloPSA Ticket Type ID",
-        "placeholder": "Enter your HaloPSA ticket type to use for CIPP Tickets. Leave blank for default."
+        "placeholder": "Enter your HaloPSA ticket type to use for CIPP Tickets. Leave blank for default.",
+        "required": true
       },
       {
         "type": "textField",
         "name": "HaloPSA.ClientID",
         "label": "HaloPSA Client ID",
-        "placeholder": "Enter your HaloPSA Client ID"
+        "placeholder": "Enter your HaloPSA Client ID",
+        "required": true
       },
       {
         "type": "password",
         "name": "HaloPSA.APIKey",
         "label": "HaloPSA Client Secret",
-        "placeholder": "Enter your client Secret. Leave blank to keep your current key."
+        "placeholder": "Enter your client Secret. Leave blank to keep your current key.",
+        "required": true
       },
       {
         "type": "switch",
@@ -206,19 +216,22 @@
         "type": "textField",
         "name": "NinjaOne.Instance",
         "label": "Please enter your NinjaOne Instance hostname",
-        "placeholder": "app.ninjarmm.com, eu.ninjarmm.com, oc.ninjarmm.com, ca.ninjarmm.com, us2.ninjarmm.com"
+        "placeholder": "app.ninjarmm.com, eu.ninjarmm.com, oc.ninjarmm.com, ca.ninjarmm.com, us2.ninjarmm.com",
+        "required": true
       },
       {
         "type": "textField",
         "name": "NinjaOne.ClientID",
         "label": "NinjaOne API Client ID",
-        "placeholder": "Enter your NinjaOne API Client ID"
+        "placeholder": "Enter your NinjaOne API Client ID",
+        "required": true
       },
       {
         "type": "password",
         "name": "NinjaOne.APIKey",
         "label": "NinjaOne API Client Secret",
-        "placeholder": "Enter your NinjaOne API Client Secret"
+        "placeholder": "Enter your NinjaOne API Client Secret",
+        "required": true
       },
       {
         "type": "switch",
@@ -267,13 +280,15 @@
         "type": "textField",
         "name": "Hudu.BaseUrl",
         "label": "Please enter your Hudu URL",
-        "placeholder": "https://yourcompany.huducloud.com"
+        "placeholder": "https://yourcompany.huducloud.com",
+        "required": true
       },
       {
         "type": "password",
         "name": "Hudu.APIKey",
         "label": "Hudu API Key",
-        "placeholder": "Enter your Hudu API Key"
+        "placeholder": "Enter your Hudu API Key",
+        "required": true
       },
       {
         "type": "switch",
@@ -319,7 +334,7 @@
     "logoDark": "/assets/integrations/pwpush_dark.png",
     "forceSyncButton": false,
     "description": "Enable the PasswordPusher integration to generate password links instead of plain text passwords.",
-    "helpText": "This integration allows you to generate password links instead of plain text passwords. Configure authentication and expiration settings that will apply to all generated passwords.",
+    "helpText": "This integration allows you to generate password links instead of plain text passwords. Configure authentication and expiration settings that will apply to all generated passwords. If you are a PWPush Pro customer and utilizing custom domains, please do not enter your custom domain in the Base URL field.",
     "links": [
       {
         "name": "PWPush Documentation",
@@ -375,6 +390,76 @@
         "type": "switch",
         "name": "PWPush.DeletableByViewer",
         "label": "Allow deletion of passwords"
+      }
+    ],
+    "mappingRequired": false
+  },
+  {
+    "name": "Have I been Pwned",
+    "id": "HIBP",
+    "type": "darkweb",
+    "cat": "Darkweb Scanning",
+    "logo": "/assets/integrations/hibp.png",
+    "logoDark": "/assets/integrations/hibp.png",
+    "forceSyncButton": false,
+    "description": "Enable the HIBP integration to scan your tenant for compromised credentials.",
+    "helpText": "This integration allows you to scan your tenant for compromised credentials, breaches, and darkweb scanning.",
+    "links": [
+      {
+        "name": "Have I Been Pwned",
+        "url": "https://haveibeenpwned.com/"
+      }
+    ],
+    "SettingOptions": [
+      {
+        "type": "password",
+        "name": "HIBP.APIKey",
+        "label": "Enter your own HIBP API Key. When you are a CyberDrain hosted partner, leave this key blank."
+      },
+      {
+        "type": "switch",
+        "name": "HIBP.Enabled",
+        "label": "Enable Integration - Allow darkweb scanning through tools and alerts"
+      }
+    ],
+    "mappingRequired": false
+  },
+  {
+    "name": "CloudFlare ZTNA Tunnel",
+    "id": "CTZTNA",
+    "type": "ztna",
+    "cat": "Zero Trust Network Tunnel",
+    "logo": "/assets/integrations/cloudflare.png",
+    "forceSyncButton": false,
+    "hideTestButton": true,
+    "description": "Enter your CloudFlare ZTNA Tunnel API Credentials to use with other Integrations",
+    "helpText": "These credentials can be used to allow traffic through a CloudFlare ZTNA Tunnel if your other Integrations are protected behind one. You need to select 'Behind a CF-ZTNA Tunnel' within the other Integration's settings to enable.",
+    "links": [
+      {
+        "name": "CloudFlare ZTNA Tunnel Information",
+        "url": "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/"
+      },
+      {
+        "name": "Installing Hudu behind Cloudflare Zero Trust Tunnel",
+        "url": "https://support.hudu.com/hc/en-us/articles/13929358997399-Installing-Hudu-behind-Cloudflare-Zero-Trust-Tunnel"
+      }
+    ],
+    "SettingOptions": [
+      {
+        "type": "password",
+        "name": "CloudFlareClientID.APIKey",
+        "label": "CloudFlare Tunnel Service Account Client ID"
+      },
+      {
+        "type": "password",
+        "name": "CloudFlareAPIKey.APIKey",
+        "label": "CloudFlare Tunnel Service Account Client Secret"
+      },
+      {
+        "_comment": "I have added this switch as a logic check for the Hudu integration script to check against when CIPP first connects to the Hudu Instance via Connect-HuduAPI.ps1",
+        "type": "switch",
+        "name": "Hudu.CFEnabled",
+        "label": " Connect to HUDU through CloudFlare Tunnel with the above Service Account credentials."
       }
     ],
     "mappingRequired": false

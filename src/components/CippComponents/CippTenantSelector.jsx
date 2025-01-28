@@ -77,6 +77,11 @@ export const CippTenantSelector = (props) => {
           ? {
               value: tenant,
               label: `${matchingTenant.displayName} (${tenant})`,
+              addedFields: {
+                defaultDomainName: matchingTenant.defaultDomainName,
+                displayName: matchingTenant.displayName,
+                customerId: matchingTenant.customerId,
+              },
             }
           : {
               value: null,
@@ -92,7 +97,7 @@ export const CippTenantSelector = (props) => {
           display: "flex",
           alignItems: "center",
           "& > *": {
-            mx: "1px", // 1px margin between the elements
+            mx: "2px", // 1px margin between the elements
           },
         }}
       >
@@ -104,6 +109,7 @@ export const CippTenantSelector = (props) => {
             onClick={() => {
               setOffcanvasVisible(true);
             }}
+            disabled={!currentTenant || currentTenant.value === "AllTenants"}
           >
             <Tooltip title="Show Tenant Information">
               <SvgIcon>
@@ -133,6 +139,11 @@ export const CippTenantSelector = (props) => {
               ? tenantList.data.map(({ customerId, displayName, defaultDomainName }) => ({
                   value: defaultDomainName,
                   label: `${displayName} (${defaultDomainName})`,
+                  addedField: {
+                    defaultDomainName: "defaultDomainName",
+                    displayName: "displayName",
+                    customerId: "customerId",
+                  },
                 }))
               : []
           }
@@ -177,47 +188,47 @@ export const CippTenantSelector = (props) => {
         actions={[
           {
             label: "M365 Admin Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.addedFields?.customerId}&CSDEST=o365admincenter`,
             icon: <GlobeAltIcon />,
           },
           {
             label: "Exchange Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://admin.exchange.microsoft.com/?landingpage=homepage&form=mac_sidebar&delegatedOrg=${currentTenant?.value}`,
             icon: <Mail />,
           },
           {
             label: "Entra Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://entra.microsoft.com/${currentTenant?.value}`,
             icon: <UsersIcon />,
           },
           {
             label: "Teams Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://admin.teams.microsoft.com/?delegatedOrg=${currentTenant?.value}`,
             icon: <FilePresent />,
           },
           {
             label: "Azure Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://portal.azure.com/${currentTenant?.value}`,
             icon: <ServerIcon />,
           },
           {
             label: "Intune Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://intune.microsoft.com/${currentTenant?.value}`,
             icon: <Laptop />,
           },
           {
-            label: "Sharepoint Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            label: "SharePoint Portal",
+            link: `https://admin.microsoft.com/Partner/beginclientsession.aspx?CTID=${currentTenant?.addedFields?.customerId}&CSDEST=SharePoint`,
             icon: <Share />,
           },
           {
             label: "Security Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://security.microsoft.com/?tid=${currentTenant?.addedFields?.customerId}`,
             icon: <Shield />,
           },
           {
             label: "Compliance Portal",
-            link: `https://admin.microsoft.com/Partner/BeginClientSession.aspx?CTID=${currentTenant?.value}&CSDEST=o365admincenter`,
+            link: `https://purview.microsoft.com/?tid=${currentTenant?.addedFields?.customerId}`,
             icon: <ShieldMoon />,
           },
         ]}

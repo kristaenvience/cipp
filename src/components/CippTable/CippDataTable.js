@@ -17,11 +17,13 @@ import { ApiGetCallWithPagination } from "../../api/ApiCall";
 import { utilTableMode } from "./util-tablemode";
 import { utilColumnsFromAPI } from "./util-columnsFromAPI";
 import { CIPPTableToptoolbar } from "./CIPPTableToptoolbar";
-import { More, MoreHoriz } from "@mui/icons-material";
+import { Info, More, MoreHoriz } from "@mui/icons-material";
 import { CippOffCanvas } from "../CippComponents/CippOffCanvas";
 import { useDialog } from "../../hooks/use-dialog";
 import { CippApiDialog } from "../CippComponents/CippApiDialog";
 import { getCippError } from "../../utils/get-cipp-error";
+import { Box } from "@mui/system";
+import { useSettings } from "../../hooks/use-settings";
 
 export const CippDataTable = (props) => {
   const {
@@ -46,30 +48,37 @@ export const CippDataTable = (props) => {
     cardButton,
     offCanvas = false,
     noCard = false,
+    hideTitle = false,
     refreshFunction,
     incorrectDataMessage = "Data not in correct format",
     onChange,
     filters,
   } = props;
   const [columnVisibility, setColumnVisibility] = useState(initialColumnVisibility);
+  const [configuredSimpleColumns, setConfiguredSimpleColumns] = useState(simpleColumns);
   const [usedData, setUsedData] = useState(data);
   const [usedColumns, setUsedColumns] = useState([]);
   const [offcanvasVisible, setOffcanvasVisible] = useState(false);
   const [offCanvasData, setOffCanvasData] = useState({});
   const [actionData, setActionData] = useState({ data: {}, action: {}, ready: false });
+  const [graphFilterData, setGraphFilterData] = useState({});
   const waitingBool = api?.url ? true : false;
+
+  const settings = useSettings();
+
   const getRequestData = ApiGetCallWithPagination({
     url: api.url,
     data: { ...api.data },
     queryKey: queryKey ? queryKey : title,
     waiting: waitingBool,
+    ...graphFilterData,
   });
 
   useEffect(() => {
-    if (data?.length) {
+    if (Array.isArray(data) && !api?.url) {
       setUsedData(data);
     }
-  }, [data]);
+  }, [data, api?.url]);
 
   useEffect(() => {
     if (getRequestData.isSuccess && !getRequestData.isFetching) {
@@ -122,14 +131,14 @@ export const CippDataTable = (props) => {
     let finalColumns = [];
     let newVisibility = { ...columnVisibility };
 
-    if (columns.length === 0 && simpleColumns.length === 0) {
+    if (columns.length === 0 && configuredSimpleColumns.length === 0) {
       finalColumns = apiColumns;
       apiColumns.forEach((col) => {
         newVisibility[col.id] = true;
       });
-    } else if (simpleColumns.length > 0) {
+    } else if (configuredSimpleColumns.length > 0) {
       finalColumns = apiColumns.map((col) => {
-        newVisibility[col.id] = simpleColumns.includes(col.id);
+        newVisibility[col.id] = configuredSimpleColumns.includes(col.id);
         return col;
       });
     } else {
@@ -147,11 +156,18 @@ export const CippDataTable = (props) => {
 
   // Apply the modeInfo directly
   const [modeInfo] = useState(
-    utilTableMode(columnVisibility, simple, actions, simpleColumns, offCanvas, onChange)
+    utilTableMode(columnVisibility, simple, actions, configuredSimpleColumns, offCanvas, onChange)
   );
   //create memoized version of usedColumns, and usedData
   const memoizedColumns = useMemo(() => usedColumns, [usedColumns]);
   const memoizedData = useMemo(() => usedData, [usedData]);
+
+  const handleActionDisabled = (row, action) => {
+    if (action?.condition) {
+      return !action.condition(row);
+    }
+    return false;
+  };
 
   const table = useMaterialReactTable({
     mrtTheme: (theme) => ({
@@ -166,11 +182,14 @@ export const CippDataTable = (props) => {
     },
     renderEmptyRowsFallback: ({ table }) =>
       getRequestData.data?.pages?.[0].Metadata?.QueueMessage ? (
-        <center>{getRequestData.data?.pages?.[0].Metadata?.QueueMessage}</center>
+        <Box sx={{ py: 4 }}>
+          <center>
+            <Info /> {getRequestData.data?.pages?.[0].Metadata?.QueueMessage}
+          </center>
+        </Box>
       ) : undefined,
     onColumnVisibilityChange: setColumnVisibility,
     ...modeInfo,
-
     renderRowActionMenuItems: actions
       ? ({ closeMenu, row }) => [
           actions.map((action, index) => (
@@ -178,6 +197,11 @@ export const CippDataTable = (props) => {
               sx={{ color: action.color }}
               key={`actions-list-row-${index}`}
               onClick={() => {
+                if (settings.currentTenant === "AllTenants" && row.original?.Tenant) {
+                  settings.handleUpdate({
+                    currentTenant: row.original.Tenant,
+                  });
+                }
                 setActionData({
                   data: row.original,
                   action: action,
@@ -192,6 +216,7 @@ export const CippDataTable = (props) => {
                   closeMenu();
                 }
               }}
+              disabled={handleActionDisabled(row.original, action)}
             >
               <SvgIcon fontSize="small" sx={{ minWidth: "30px" }}>
                 {action.icon}
@@ -235,6 +260,9 @@ export const CippDataTable = (props) => {
           {!simple && (
             <CIPPTableToptoolbar
               table={table}
+              api={api}
+              queryKey={queryKey}
+              simpleColumns={simpleColumns}
               data={data}
               columnVisibility={columnVisibility}
               getRequestData={getRequestData}
@@ -247,6 +275,9 @@ export const CippDataTable = (props) => {
               setColumnVisibility={setColumnVisibility}
               filters={filters}
               queryKeys={queryKey}
+              graphFilterData={graphFilterData}
+              setGraphFilterData={setGraphFilterData}
+              setConfiguredSimpleColumns={setConfiguredSimpleColumns}
             />
           )}
         </>
@@ -283,8 +314,12 @@ export const CippDataTable = (props) => {
       ) : (
         // Render the table inside a Card
         <Card style={{ width: "100%" }}>
-          <CardHeader action={cardButton} title={title} />
-          <Divider />
+          {cardButton || !hideTitle ? (
+            <>
+              <CardHeader action={cardButton} title={hideTitle ? "" : title} />
+              <Divider />
+            </>
+          ) : null}
           <CardContent sx={{ padding: "1rem" }}>
             <Scrollbar>
               {!Array.isArray(usedData) && usedData ? (

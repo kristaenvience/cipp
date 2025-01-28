@@ -9,7 +9,16 @@ import { useSettings } from "../../hooks/use-settings";
 import CippFormComponent from "./CippFormComponent";
 
 export const CippApiDialog = (props) => {
-  const { createDialog, title, fields, api, row, relatedQueryKeys, ...other } = props;
+  const {
+    createDialog,
+    title,
+    fields,
+    api,
+    row = {},
+    relatedQueryKeys,
+    dialogAfterEffect,
+    ...other
+  } = props;
   const router = useRouter();
   const [addedFieldData, setAddedFieldData] = useState({});
   const [partialResults, setPartialResults] = useState([]);
@@ -38,6 +47,9 @@ export const CippApiDialog = (props) => {
     bulkRequest: api.multiPost === false,
     onResult: (result) => {
       setPartialResults((prevResults) => [...prevResults, result]);
+      if (api?.onSuccess) {
+        api.onSuccess(result);
+      }
     },
   });
   const actionGetRequest = ApiGetCall({
@@ -50,6 +62,9 @@ export const CippApiDialog = (props) => {
     bulkRequest: api.multiPost === false,
     onResult: (result) => {
       setPartialResults((prevResults) => [...prevResults, result]);
+      if (api?.onSuccess) {
+        api.onSuccess(result);
+      }
     },
   });
 
@@ -57,91 +72,138 @@ export const CippApiDialog = (props) => {
     if (typeof api?.dataFunction === "function") {
       return api.dataFunction(row);
     }
-    const newData = {};
-    Object.keys(dataObject).forEach((key) => {
-      const value = dataObject[key];
-      if (typeof value === "string" && value.startsWith("!")) {
-        newData[key] = value.slice(1); // Remove "!" and pass the key as-is
-      } else if (typeof value === "string" && row[value] !== undefined) {
-        newData[key] = row[value];
-      } else if (typeof value === "object" && value !== null) {
-        const processedValue = processActionData(value, row, replacementBehaviour);
-        if (replacementBehaviour !== "removeNulls" || Object.keys(processedValue).length > 0) {
-          newData[key] = processedValue;
-        }
-      } else if (replacementBehaviour !== "removeNulls") {
-        newData[key] = value;
-      } else if (row[value] !== undefined) {
-        newData[key] = row[value];
-      }
-    });
+    var newData = {};
 
+    if (api?.postEntireRow) {
+      newData = row;
+    } else {
+      Object.keys(dataObject).forEach((key) => {
+        const value = dataObject[key];
+
+        if (typeof value === "string" && value.startsWith("!")) {
+          newData[key] = value.slice(1);
+        } else if (typeof value === "string") {
+          if (row[value] !== undefined) {
+            newData[key] = row[value];
+          } else {
+            newData[key] = value;
+          }
+        } else if (typeof value === "object" && value !== null) {
+          const processedValue = processActionData(value, row, replacementBehaviour);
+          if (replacementBehaviour !== "removeNulls" || Object.keys(processedValue).length > 0) {
+            newData[key] = processedValue;
+          }
+        } else if (replacementBehaviour !== "removeNulls") {
+          newData[key] = value;
+        } else if (row[value] !== undefined) {
+          newData[key] = row[value];
+        }
+      });
+    }
     return newData;
   };
   const tenantFilter = useSettings().currentTenant;
   const handleActionClick = (row, action, formData) => {
+    if (action.multiPost === undefined) {
+      action.multiPost = false;
+    }
     if (api.customFunction) {
       action.customFunction(row, action, formData);
       createDialog.handleClose();
       return;
     }
-    let data = { ...{ tenantFilter: tenantFilter }, ...formData, ...addedFieldData };
+
+    const commonData = {
+      tenantFilter: tenantFilter,
+      ...formData,
+      ...addedFieldData,
+    };
     const processedActionData = processActionData(action.data, row, action.replacementBehaviour);
+
     if (Array.isArray(row) && action.multiPost === false) {
-      const bulkData = row.map((singleRow) => {
-        const elementData = {};
+      const arrayOfObjects = row.map((singleRow) => {
+        const itemData = { ...commonData };
         Object.keys(processedActionData).forEach((key) => {
-          const value = singleRow[processedActionData[key]];
-          elementData[key] = value !== undefined ? value : processedActionData[key];
+          const rowValue = singleRow[processedActionData[key]];
+          itemData[key] = rowValue !== undefined ? rowValue : processedActionData[key];
         });
-        return { ...{ tenantFilter: tenantFilter }, ...elementData, ...formData };
+        return itemData;
       });
-
       if (action.type === "POST") {
         actionPostRequest.mutate({
           url: action.url,
-          bulkRequest: api.multiPost === false,
-          data: bulkData,
+          bulkRequest: true,
+          data: arrayOfObjects,
         });
       } else if (action.type === "GET") {
         setGetRequestInfo({
           url: action.url,
           waiting: true,
           queryKey: Date.now(),
-          data: bulkData,
-          bulkRequest: action.multiPost,
+          bulkRequest: true,
+          data: arrayOfObjects,
         });
       }
-    } else {
-      Object.keys(processedActionData).forEach((key) => {
-        if (Array.isArray(row) && action.multiPost) {
-          data[key] = row.map((singleRow) => {
-            const value = singleRow[processedActionData[key]];
-            return value !== undefined ? value : processedActionData[key];
-          });
-        } else {
-          const value = row[processedActionData[key]];
-          data[key] = value !== undefined ? value : processedActionData[key];
-        }
+
+      return;
+    }
+
+    if (Array.isArray(row) && action.multiPost === true) {
+      const singleArrayData = row.map((singleRow) => {
+        const itemData = { ...commonData };
+        Object.keys(processedActionData).forEach((key) => {
+          const rowValue = singleRow[processedActionData[key]];
+          itemData[key] = rowValue !== undefined ? rowValue : processedActionData[key];
+        });
+        return itemData;
       });
 
       if (action.type === "POST") {
         actionPostRequest.mutate({
           url: action.url,
-          data: { ...data, ...formData },
+          bulkRequest: false,
+          data: singleArrayData,
         });
       } else if (action.type === "GET") {
         setGetRequestInfo({
           url: action.url,
           waiting: true,
           queryKey: Date.now(),
-          data: { ...data, ...formData },
-          bulkRequest: action.multiPost,
+          bulkRequest: false,
+          data: singleArrayData,
         });
       }
+      return;
+    }
+
+    const finalData = { ...commonData };
+    Object.keys(processedActionData).forEach((key) => {
+      const rowValue = row[processedActionData[key]];
+      finalData[key] = rowValue !== undefined ? rowValue : processedActionData[key];
+    });
+
+    if (action.type === "POST") {
+      actionPostRequest.mutate({
+        url: action.url,
+        bulkRequest: false,
+        data: finalData,
+      });
+    } else if (action.type === "GET") {
+      setGetRequestInfo({
+        url: action.url,
+        waiting: true,
+        queryKey: Date.now(),
+        bulkRequest: false,
+        data: finalData,
+      });
     }
   };
-
+  //add a useEffect, when dialogAfterEffect exists, and the post or get request is successful, run the dialogAfterEffect function
+  useEffect(() => {
+    if (dialogAfterEffect && (actionPostRequest.isSuccess || actionGetRequest.isSuccess)) {
+      dialogAfterEffect(actionPostRequest.data.data || actionGetRequest.data);
+    }
+  }, [actionPostRequest.isSuccess, actionGetRequest.isSuccess]);
   const formHook = useForm();
   const onSubmit = (data) => handleActionClick(row, api, data);
   const selectedType = api.type === "POST" ? actionPostRequest : actionGetRequest;

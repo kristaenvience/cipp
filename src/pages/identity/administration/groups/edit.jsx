@@ -55,6 +55,7 @@ const EditGroup = () => {
 
         formControl.reset({
           tenantId: tenantFilter,
+          mail: group.mail,
           allowExternal: group.allowExternal,
           sendCopies: group.sendCopies,
           groupName: group.displayName,
@@ -90,7 +91,7 @@ const EditGroup = () => {
         <CippFormPage
           formControl={formControl}
           queryKey={`ListGroups-${groupId}`}
-          title="Group"
+          title={`Group: ${groupInfo.data?.groupInfo?.displayName || ''}`}
           formPageType="Edit"
           backButtonTitle="Group Overview"
           postUrl="/api/EditGroup"

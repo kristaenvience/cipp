@@ -3,6 +3,7 @@ import {
   Cloud,
   CloudOutlined,
   DeviceHub,
+  HomeRepairService,
   Laptop,
   MailOutline,
   Shield,
@@ -36,11 +37,11 @@ export const nativeMenuItems = [
           { title: "Users", path: "/identity/administration/users" },
           { title: "Risky Users", path: "/identity/administration/risky-users" },
           { title: "Groups", path: "/identity/administration/groups" },
-          { title: "Devices", path: "/identity/administration/devices" },
           {
             title: "Group Templates",
             path: "/identity/administration/group-templates",
           },
+          { title: "Devices", path: "/identity/administration/devices" },
           { title: "Deleted Items", path: "/identity/administration/deleted-items" },
           { title: "Roles", path: "/identity/administration/roles" },
           { title: "JIT Admin", path: "/identity/administration/jit-admin" },
@@ -114,26 +115,6 @@ export const nativeMenuItems = [
         items: [{ title: "Backups", path: "/tenant/backup/backup-wizard" }],
       },
       {
-        title: "Tools",
-        path: "/tenant/tools",
-        items: [
-          {
-            title: "Graph Explorer",
-            path: "/tenant/administration/graph-explorer",
-          },
-          {
-            title: "Application Approval",
-            path: "/tenant/administration/appapproval",
-          },
-          { title: "IP Database", path: "/tenant/tools/geoiplookup" },
-          { title: "Tenant Lookup", path: "/tenant/tools/tenantlookup" },
-          {
-            title: "Individual Domain Check",
-            path: "/tenant/standards/individual-domains",
-          },
-        ],
-      },
-      {
         title: "Standards",
         path: "/tenant/standards",
         items: [
@@ -167,7 +148,6 @@ export const nativeMenuItems = [
           },
         ],
       },
-
       {
         title: "Reports",
         path: "/tenant/reports",
@@ -175,6 +155,10 @@ export const nativeMenuItems = [
           {
             title: "Licence Report",
             path: "/tenant/administration/list-licenses",
+          },
+          {
+            title: "Sherweb Licence Report",
+            path: "/tenant/administration/list-csp-licenses",
           },
           {
             title: "Consented Applications",
@@ -252,7 +236,6 @@ export const nativeMenuItems = [
           { title: "Autopilot Devices", path: "/endpoint/autopilot/list-devices" },
           { title: "Add Autopilot Device", path: "/endpoint/autopilot/add-device" },
           { title: "Profiles", path: "/endpoint/autopilot/list-profiles" },
-          { title: "Add Profile", path: "/endpoint/autopilot/add-profile" },
           { title: "Status Pages", path: "/endpoint/autopilot/list-status-pages" },
           { title: "Add Status Page", path: "/endpoint/autopilot/add-status-page" },
         ],
@@ -279,7 +262,7 @@ export const nativeMenuItems = [
     ],
   },
   {
-    title: "Teams & Sharepoint",
+    title: "Teams & SharePoint",
     type: "header",
     icon: (
       <SvgIcon>
@@ -290,19 +273,16 @@ export const nativeMenuItems = [
       {
         title: "OneDrive",
         path: "/teams-share/onedrive",
-        items: [{ title: "OneDrive", path: "/teams-share/onedrive/list" }],
       },
       {
         title: "SharePoint",
         path: "/teams-share/sharepoint",
-        items: [{ title: "SharePoint", path: "/teams-share/sharepoint/list-sharepoint" }],
       },
       {
         title: "Teams",
         path: "/teams-share/teams",
         items: [
           { title: "Teams", path: "/teams-share/teams/list-team" },
-          { title: "Add Team", path: "/teams-share/teams/add-team" },
           { title: "Teams Activity", path: "/teams-share/teams/teams-activity" },
           { title: "Business Voice", path: "/teams-share/teams/business-voice" },
         ],
@@ -334,35 +314,15 @@ export const nativeMenuItems = [
         ],
       },
       {
-        title: "Tools",
-        path: "/email/tools",
-        items: [
-          {
-            title: "Mailbox Restore Wizard",
-            path: "/email/tools/mailbox-restore-wizard",
-          },
-          { title: "Mailbox Restores", path: "/email/tools/mailbox-restores" },
-          { title: "Message Viewer", path: "/email/tools/message-viewer" },
-        ],
-      },
-      {
         title: "Transport",
         path: "/email/Transport",
         items: [
           { title: "Transport rules", path: "/email/transport/list-rules" },
           {
-            title: "Deploy Transport rule",
-            path: "/email/transport/deploy-rules",
-          },
-          {
             title: "Transport Templates",
             path: "/email/transport/list-templates",
           },
           { title: "Connectors", path: "/email/connectors/list-connectors" },
-          {
-            title: "Deploy Connector Templates",
-            path: "/email/connectors/deploy-connector",
-          },
           {
             title: "Connector Templates",
             path: "/email/connectors/list-connector-templates",
@@ -374,11 +334,9 @@ export const nativeMenuItems = [
         path: "/email/spamfilter",
         items: [
           { title: "Spamfilter", path: "/email/spamfilter/list-spamfilter" },
-          {
-            title: "Apply Spamfilter Template",
-            path: "/email/spamfilter/deploy",
-          },
-          { title: "Templates", path: "/email/spamfilter/list-templates" },
+          { title: "Spamfilter templates", path: "/email/spamfilter/list-templates" },
+          { title: "Connection filter", path: "/email/connectionfilter/list-connectionfilter" },
+          { title: "Connection filter templates", path: "/email/connectionfilter/list-templates" },
         ],
       },
       {
@@ -401,7 +359,6 @@ export const nativeMenuItems = [
             title: "Mailbox Client Access Settings",
             path: "/email/reports/mailbox-cas-settings",
           },
-          { title: "Message Trace", path: "/email/reports/message-trace" },
           {
             title: "Anti-Phishing Filters",
             path: "/email/reports/antiphishing-filters",
@@ -419,7 +376,71 @@ export const nativeMenuItems = [
             title: "Shared Mailbox with Enabled Account",
             path: "/email/reports/SharedMailboxEnabledAccount",
           },
+          {
+            title: "Global Address List",
+            path: "/email/reports/global-address-list",
+          },
         ],
+      },
+    ],
+  },
+  {
+    title: "Tools",
+    type: "header",
+    icon: (
+      <SvgIcon>
+        <HomeRepairService />
+      </SvgIcon>
+    ),
+    items: [
+      {
+        title: "Tenant Tools",
+        path: "/tenant/tools",
+        items: [
+          {
+            title: "Graph Explorer",
+            path: "/tenant/administration/graph-explorer",
+          },
+          {
+            title: "Application Approval",
+            path: "/tenant/administration/appapproval",
+          },
+          { title: "Tenant Lookup", path: "/tenant/tools/tenantlookup" },
+
+          { title: "IP Database", path: "/tenant/tools/geoiplookup" },
+
+          {
+            title: "Individual Domain Check",
+            path: "/tenant/standards/individual-domains",
+          },
+        ],
+      },
+      {
+        title: "Email Tools",
+        path: "/email/tools",
+        items: [
+          { title: "Message Trace", path: "/email/tools/message-trace" },
+          { title: "Mailbox Restores", path: "/email/tools/mailbox-restores" },
+          { title: "Message Viewer", path: "/email/tools/message-viewer" },
+        ],
+      },
+      {
+        title: "Dark Web Tools",
+        path: "/tools/darkweb",
+        items: [
+          { title: "Tenant Breach Lookup", path: "/tools/tenantbreachlookup" },
+          { title: "Breach Lookup", path: "/tools/breachlookup" },
+        ],
+      },
+      {
+        title: "Template Library",
+        path: "/tools/templatelib",
+        roles: ["editor", "admin", "superadmin"],
+      },
+      {
+        title: "Scheduler",
+        path: "/cipp/scheduler",
+        roles: ["editor", "admin", "superadmin"],
       },
     ],
   },
@@ -432,17 +453,10 @@ export const nativeMenuItems = [
       </SvgIcon>
     ),
     items: [
-      {
-        title: "Settings",
-        items: [
-          { title: "Application Settings", path: "/cipp/settings", roles: ["admin", "superadmin"] },
-          { title: "Integrations", path: "/cipp/integrations", roles: ["admin", "superadmin"] },
-          { title: "Scheduler", path: "/cipp/scheduler", roles: ["editor", "admin", "superadmin"] },
-          { title: "Logbook", path: "/cipp/logs", roles: ["admin", "superadmin"] },
-          { title: "SAM Setup Wizard", path: "/onboarding", roles: ["admin", "superadmin"] },
-          { title: "Log Out", path: "/logout" },
-        ],
-      },
+      { title: "Application Settings", path: "/cipp/settings", roles: ["admin", "superadmin"] },
+      { title: "Logbook", path: "/cipp/logs", roles: ["admin", "superadmin"] },
+      { title: "SAM Setup Wizard", path: "/onboarding", roles: ["admin", "superadmin"] },
+      { title: "Integrations", path: "/cipp/integrations", roles: ["admin", "superadmin"] },
       {
         title: "Advanced",
         roles: ["superadmin"],
@@ -451,6 +465,16 @@ export const nativeMenuItems = [
           {
             title: "Exchange Cmdlets",
             path: "/cipp/advanced/exchange-cmdlets",
+            roles: ["superadmin"],
+          },
+          {
+            title: "Timers",
+            path: "/cipp/advanced/timers",
+            roles: ["superadmin"],
+          },
+          {
+            title: "Table Maintenance",
+            path: "/cipp/advanced/table-maintenance",
             roles: ["superadmin"],
           },
         ],

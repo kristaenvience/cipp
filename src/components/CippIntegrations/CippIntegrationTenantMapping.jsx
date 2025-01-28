@@ -19,9 +19,10 @@ import { useEffect } from "react";
 import { CippDataTable } from "../CippTable/CippDataTable";
 import { PlusSmallIcon, SparklesIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CippFormTenantSelector } from "../CippComponents/CippFormTenantSelector";
-import { SyncAlt } from "@mui/icons-material";
+import { Sync, SyncAlt } from "@mui/icons-material";
 import { CippFormComponent } from "../CippComponents/CippFormComponent";
 import { CippApiResults } from "../CippComponents/CippApiResults";
+import { ApiGetCallWithPagination } from "../../api/ApiCall";
 
 const CippIntegrationSettings = ({ children }) => {
   const router = useRouter();
@@ -35,7 +36,7 @@ const CippIntegrationSettings = ({ children }) => {
     queryKey: `IntegrationTenantMapping-${router.query.id}`,
   });
 
-  const tenantList = ApiGetCall({
+  const tenantList = ApiGetCallWithPagination({
     url: "/api/ListTenants",
     data: { AllTenantSelector: false },
     queryKey: "ListTenants-notAllTenants",
@@ -52,13 +53,13 @@ const CippIntegrationSettings = ({ children }) => {
 
   const postCall = ApiPostCall({
     datafromUrl: true,
+    relatedQueryKeys: [`IntegrationTenantMapping-${router.query.id}`],
   });
 
   const handleSubmit = () => {
     postCall.mutate({
       url: `/api/ExecExtensionMapping?AddMapping=${router.query.id}`,
       data: tableData,
-      queryKey: `IntegrationTenantMapping-${router.query.id}`,
     });
   };
 
@@ -81,10 +82,10 @@ const CippIntegrationSettings = ({ children }) => {
     const selectedTenant = formControl.getValues("tenantFilter");
     const selectedCompany = formControl.getValues("integrationCompany");
     if (!selectedTenant || !selectedCompany) return;
-    if (tableData.find((item) => item.TenantId === selectedTenant.value)) return;
+    if (tableData?.find((item) => item.TenantId === selectedTenant.addedFields.customerId)) return;
 
     const newRowData = {
-      TenantId: selectedTenant.value,
+      TenantId: selectedTenant.addedFields.customerId,
       Tenant: selectedTenant.label,
       IntegrationName: selectedCompany.label,
       IntegrationId: selectedCompany.value,
@@ -94,29 +95,37 @@ const CippIntegrationSettings = ({ children }) => {
   };
 
   const handleAutoMap = () => {
-    const newTableData = [];
-    tenantList.data.forEach((tenant) => {
-      const matchingCompany = mappings.data.Companies.find(
-        (company) => company.name === tenant.displayName
-      );
-      if (tableData.find((item) => item.TenantId === tenant.customerId)) return;
-      if (matchingCompany) {
-        newTableData.push({
-          TenantId: tenant.customerId,
-          Tenant: tenant.displayName,
-          IntegrationName: matchingCompany.name,
-          IntegrationId: matchingCompany.value,
+      const newTableData = [];
+      tenantList.data?.pages[0]?.forEach((tenant) => {
+        const matchingCompany = mappings.data.Companies.find(
+          (company) => company.name === tenant.displayName
+        );
+        if (
+          Array.isArray(tableData) &&
+          tableData?.find((item) => item.TenantId === tenant.customerId)
+        )
+          return;
+        if (matchingCompany) {
+          newTableData.push({
+            TenantId: tenant.customerId,
+            Tenant: tenant.displayName,
+            IntegrationName: matchingCompany.name,
+            IntegrationId: matchingCompany.value,
+          });
+        }
+      });
+      if (Array.isArray(tableData)) {
+        setTableData([...tableData, ...newTableData]);
+      } else {
+        setTableData(newTableData);
+      }
+      if (extension.autoMapSyncApi) {
+        automapPostCall.mutate({
+          url: `/api/ExecExtensionMapping?AutoMapping=${router.query.id}`,
+          queryKey: `IntegrationTenantMapping-${router.query.id}`,
         });
       }
-    });
-    setTableData([...tableData, ...newTableData]);
-    if (extension.autoMapSyncApi) {
-      automapPostCall.mutate({
-        url: `/api/ExecExtensionMapping?AutoMapping=${router.query.id}`,
-        queryKey: `IntegrationTenantMapping-${router.query.id}`,
-      });
-    }
-  };
+    };
 
   const actions = [
     {
@@ -153,7 +162,12 @@ const CippIntegrationSettings = ({ children }) => {
             >
               <Grid item xs={12} md={4}>
                 <Box sx={{ my: "auto" }}>
-                  <CippFormTenantSelector formControl={formControl} multiple={false} />
+                  <CippFormTenantSelector
+                    formControl={formControl}
+                    multiple={false}
+                    required={false}
+                    disableClearable={false}
+                  />
                 </Box>
               </Grid>
               <Grid item>
@@ -176,7 +190,9 @@ const CippIntegrationSettings = ({ children }) => {
                       value: company.value,
                     };
                   })}
+                  creatable={false}
                   multiple={false}
+                  isFetching={mappings.isFetching}
                 />
               </Grid>
               <Grid item>
@@ -195,6 +211,19 @@ const CippIntegrationSettings = ({ children }) => {
                       </SvgIcon>
                     </Button>
                   </Tooltip>
+                  <Tooltip title="Refresh Integration Mapping">
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        mappings.refetch();
+                      }}
+                      variant="contained"
+                    >
+                      <SvgIcon>
+                        <Sync />
+                      </SvgIcon>
+                    </Button>
+                  </Tooltip>
                 </Stack>
               </Grid>
             </Grid>
@@ -207,6 +236,8 @@ const CippIntegrationSettings = ({ children }) => {
                 data={tableData}
                 simple={false}
                 simpleColumns={["Tenant", "IntegrationName"]}
+                isFetching={mappings.isFetching}
+                refreshFunction={() => mappings.refetch()}
               />
             </Box>
             <CippApiResults apiObject={postCall} />

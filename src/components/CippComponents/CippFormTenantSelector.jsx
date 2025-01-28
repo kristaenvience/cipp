@@ -6,8 +6,20 @@ export const CippFormTenantSelector = ({
   allTenants = false,
   type = "multiple",
   name = "tenantFilter",
+  valueField = "defaultDomainName",
+  required = true,
+  disableClearable = true,
   ...other
 }) => {
+  const validators = () => {
+    if (required) {
+      return {
+        required: { value: true, message: "This field is required" },
+      };
+    }
+    return {};
+  };
+
   return (
     <CippFormComponent
       type="autoComplete"
@@ -19,13 +31,16 @@ export const CippFormTenantSelector = ({
         url: allTenants ? "/api/ListTenants?AllTenantSelector=true" : "/api/ListTenants",
         queryKey: allTenants ? "ListTenants-AllTenantSelector" : "ListTenants-notAllTenants",
         labelField: (option) => `${option.displayName} (${option.defaultDomainName})`,
-        valueField: "defaultDomainName",
+        valueField: valueField,
+        addedField: {
+          defaultDomainName: "defaultDomainName",
+          displayName: "displayName",
+          customerId: "customerId",
+        },
       }}
       multiple={type === "single" ? false : true}
-      disableClearable={true}
-      validators={{
-        required: { value: true, message: "This field is required" },
-      }}
+      disableClearable={disableClearable}
+      validators={validators}
       {...other}
     />
   );

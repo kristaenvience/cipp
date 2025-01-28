@@ -40,6 +40,10 @@ const Page = () => {
     urlFromData: true,
   });
 
+  const downloadAction = ApiPostCall({
+    urlFromData: true,
+  });
+
   const runBackup = ApiPostCall({
     urlFromData: true,
     relatedQueryKeys: ["BackupList", "ScheduledBackup"],
@@ -96,7 +100,7 @@ const Page = () => {
   };
 
   const handleDownloadBackupAction = (row) => {
-    backupAction.mutate(
+    downloadAction.mutate(
       {
         url: `/api/ExecListBackup?BackupName=${row.BackupName}`,
         data: {},
@@ -136,55 +140,55 @@ const Page = () => {
       label: "Download Backup",
       icon: <CloudDownload />,
       noConfirm: true,
-      confirmText: "Do you want to download this backup?",
       customFunction: handleDownloadBackupAction,
     },
   ];
 
   return (
     <>
-      <CippPageCard title="CIPP Backup" backButtonTitle="Settings">
+      <CippPageCard
+        title="CIPP Backup"
+        backButtonTitle="Settings"
+        infoBar={
+          <CippInfoBar
+            isFetching={backupList.isFetching}
+            data={[
+              {
+                icon: <Storage />,
+                name: "Backup Count",
+                data: backupList.data?.length,
+              },
+              {
+                icon: <History />,
+                name: "Last Backup",
+                data: backupList.data?.[0]?.Timestamp ? (
+                  <ReactTimeAgo date={backupList.data?.[0]?.Timestamp} />
+                ) : (
+                  "No Backups"
+                ),
+              },
+              {
+                icon: <EventRepeat />,
+                name: "Automatic Backups",
+                data:
+                  scheduledBackup.data?.[0]?.Name === "Automated CIPP Backup"
+                    ? "Enabled"
+                    : "Disabled",
+              },
+              {
+                icon: <NextPlan />,
+                name: "Next Backup",
+                data: <NextBackupRun date={scheduledBackup.data?.[0]?.ScheduledTime} />,
+              },
+            ]}
+          />
+        }
+      >
         <CardContent>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <CippInfoBar
-                isFetching={backupList.isFetching}
-                data={[
-                  {
-                    icon: <Storage />,
-                    name: "Backup Count",
-                    data: backupList.data?.length,
-                  },
-                  {
-                    icon: <History />,
-                    name: "Last Backup",
-                    data: backupList.data?.[0]?.Timestamp ? (
-                      <ReactTimeAgo date={backupList.data?.[0]?.Timestamp} />
-                    ) : (
-                      "No Backups"
-                    ),
-                  },
-                  {
-                    icon: <EventRepeat />,
-                    name: "Automatic Backups",
-                    data:
-                      scheduledBackup.data?.[0]?.Name === "Automated CIPP Backup"
-                        ? "Enabled"
-                        : "Disabled",
-                  },
-                  {
-                    icon: <NextPlan />,
-                    name: "Next Backup",
-                    data: <NextBackupRun date={scheduledBackup.data?.[0]?.ScheduledTime} />,
-                  },
-                ]}
-              />
-            </Grid>
-          </Grid>
           <Typography variant="body2" sx={{ mt: 3, px: 3 }}>
             Backups are stored in the storage account associated with your CIPP instance. You can
             download or restore specific points in time from the list below. Enable automatic
-            updates to have CIPP create daily backups.
+            backups to have CIPP create daily backups using the scheduler.
           </Typography>
           {backupList.isSuccess ? (
             <Box sx={{ mt: 3 }}>
@@ -195,6 +199,8 @@ const Page = () => {
                 title="Backup List"
                 data={backupList.data}
                 simpleColumns={["BackupName", "Timestamp"]}
+                refreshFunction={() => backupList.refetch()}
+                isFetching={backupList.isFetching}
                 actions={actions}
                 cardButton={
                   <>
